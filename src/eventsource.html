@@ -6,12 +6,12 @@
     <script>
         var es = new EventSource("log");
         es.addEventListener("message", function (event) {
-            var div = document.createElement("div");
-            div.appendChild(document.createTextNode(event.data));
-            document.body.appendChild(div);
+            var div = document.getElementById("humidity");
+            div.innerHTML = event.data;
         });
     </script>
 </head>
 <body>
+<div type="text" id="humidity"></div>
 </body>
 </html>
