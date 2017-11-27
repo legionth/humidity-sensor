@@ -11,29 +11,32 @@ $loop = \React\EventLoop\Factory::create();
 
 $stream = new ThroughStream();
 $server = new Server(function (ServerRequestInterface $request) use ($loop, $stream) {
+    $header = array('Content-Type' => 'text/html');
+    $body = file_get_contents(dir(__FILE__) . '/eventsource.html');
+
     if ($request->getRequestTarget() === '/log') {
+        $header = array('Content-Type' => 'text/event-stream');
 
         $stream->on('error', function (\Exception $exception) {
             echo $exception->getMessage() . PHP_EOL;
         });
 
-        $loop->addPeriodicTimer(1, function () use ($stream) {
-            $stream->write("data: " . exec("python " . __DIR__ . "/fetchHumidityInPercent.py"). "\n\n");
+        $loop->addPeriodicTimer(1, function () use ($stream, $loop) {
+            $process = new React\ChildProcess\Process('python ' . dir(__FILE__) . '/fetchHumidityInPercent.py');
+            $process->start($loop);
+
+            $process->stdout->on('data', function ($data) use ($stream) {
+                $stream->write("data: " . $data . "\n\n");
+            });
         });
 
-        return new Response(
-            200,
-            array(
-                'Content-Type' => 'text/event-stream',
-            ),
-            $stream
-        );
+        $body = $stream;
     }
 
     return new Response(
         200,
-        array('Content-Type' => 'text/html'),
-        file_get_contents(__DIR__ . '/eventsource.html')
+        $header,
+        $body
     );
 });
 
