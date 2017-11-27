@@ -12,7 +12,7 @@ $loop = \React\EventLoop\Factory::create();
 $stream = new ThroughStream();
 $server = new Server(function (ServerRequestInterface $request) use ($loop, $stream) {
     $header = array('Content-Type' => 'text/html');
-    $body = file_get_contents(dir(__FILE__) . '/eventsource.html');
+    $body = file_get_contents(dirname(__FILE__) . '/eventsource.html');
 
     if ($request->getRequestTarget() === '/log') {
         $header = array('Content-Type' => 'text/event-stream');
@@ -22,7 +22,7 @@ $server = new Server(function (ServerRequestInterface $request) use ($loop, $str
         });
 
         $loop->addPeriodicTimer(1, function () use ($stream, $loop) {
-            $process = new React\ChildProcess\Process('python ' . dir(__FILE__) . '/fetchHumidityInPercent.py');
+            $process = new React\ChildProcess\Process('python ' . dirname(__FILE__) . '/fetchHumidityInPercent.py');
             $process->start($loop);
 
             $process->stdout->on('data', function ($data) use ($stream) {
